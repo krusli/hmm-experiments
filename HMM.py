@@ -41,7 +41,7 @@ class HMM:
             assert a > 0
             # TODO: comb(x+a-1, a) results in 0 probabilities
             # NOTE: x (no of items in a time period) should be greater than 0 to ensure no 0 probabilities because of invalid inputs to comb(x+a, a)
-            return comb(x+a-1, a) * (b/(b+1))**x * (1 - b/(b+1))**a
+            return comb(x+a-1, x) * (b/(b+1))**x * (1 - b/(b+1))**a
 
         # Multinomial
         item_probs = [row[k] for row in theta]  # param
@@ -451,20 +451,16 @@ class HMM:
         for k in range(len(a)):
             # print('a[{}]: {}, b[{}]: {}'.format(k, a[k], k, b[k]))
             b[k] = average_counts[k] / a[k]  # Minka 2002 (3)
-            if average_counts != 0:
-                a[k] = 0.5 / (log(average_counts[k]) - average_log_counts[k])
-
-            # starting point
-            if average_counts != 0:
-                a[k] = 0.5 / (log(average_counts[k]) - average_log_counts[k])
+            a[k] = 0.5 / (log(average_counts[k]) - average_log_counts[k])
 
             while True:  # NOTE: *should* converge in four iterations
                 a_old = a[k]
 
                 # print(average_counts[k], a[k])
                 if average_counts[k] > 0 and a[k] > 0:
+                    # TODO WRONG f/df
                     # f = sum(sum(gammas[u][t][k] * (polygamma(0, a[k] + average_counts[k]) - polygamma(0, a[k]) - log(average_counts[k]/a[k] + 1)) for t in range(T)) for u in range(no_of_users))
-                    # df = sum(sum(gammas[u][t][k] * (polygamma(1, a[k] + average_counts[k]) - polygamma(1, a[k]) - 1/(average_counts[k] + a[k]) + 1/a[k]) for t in range(t)) for u in range(no_of_users))
+                    # df = sum(sum(gammas[u][t][k] * (polygamma(1, a[k] + average_counts[k]) - polygamma(1, a[k]) - 1/(average_counts[k] + a[k]) + 1/a[k]) for t in range(T)) for u in range(no_of_users))
                     a_new_inv = 1/a[k] + (average_log_counts[k] - log(average_counts[k]) + log(a[k]) - polygamma(0, a[k])) / (a[k]**2 * (1/a[k] - polygamma(1, a[k])))
                     a[k] = 1/a_new_inv
 
